@@ -10,7 +10,6 @@ DisableProgramGroupPage=yes
 
 [Languages]
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
-Name: "en"; MessagesFile: "compiler:Default.isl"
 
 
 [Files]
@@ -21,23 +20,27 @@ Root: HKCU; Subkey: "Software\Aktiv Co."; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\Aktiv Co.\Rutoken UTM fix"; Flags: uninsdeletekey
 
 [Run]
-Filename: "{app}\rutoken_new.bat"; Parameters: {code:GetUserPIN}
+Filename: {code:GetRunAppPath};  Parameters: {code:GetUserPIN}
 
 [Code]
 var
   KeyPage: TInputQueryWizardPage;
+  TypePage: TInputOptionWizardPage;
   ProgressPage: TOutputProgressWizardPage;
   
 procedure InitializeWizard;
 begin
-  
-  KeyPage := CreateInputQueryPage(wpWelcome, 'Персональная информация', 'PIN-код от токена', 'Пожалуйста укажите PIN-код токена и нажмите Next чтобы продолжить.');
+  KeyPage := CreateInputQueryPage(wpWelcome, 'Персональная информация', 'PIN-код от токена', 'Пожалуйста, укажите PIN-код токена и нажмите Next чтобы продолжить.');
   KeyPage.Add('PIN-код токена:', False);
+
+  TypePage := CreateInputOptionPage(KeyPage.ID, 'Настройки установки', 'Режим настройки', 'Пожалуйста, выберите режим, который будет использоваться для настройки:', True, False);
+  TypePage.Add('Графический интерфейс');
+  TypePage.Add('Автоматическая настройка');
+  TypePage.Values[0] := True;
 
   ProgressPage := CreateOutputProgressPage('Персональная информация', 'PIN-код от токена');
 
   KeyPage.Values[0] := GetPreviousData('PIN', '12345678');
-
 end;
 
 procedure RegisterPreviousData(PreviousDataKey: Integer);
@@ -53,6 +56,14 @@ var
   ResultCode: Integer;
 begin
   if CurPageID = KeyPage.ID then begin
+    if KeyPage.Values[0] = '' then begin
+      MsgBox('Значение PIN-кода не может быть пустым. Задайте корректное значение', mbInformation, MB_OK);
+      Result := False;
+      exit
+    end;
+  end;
+  
+  if CurPageID = TypePage.ID then begin
     ProgressPage.SetText('Выполняю проверку компьютера...', '');
     ProgressPage.SetProgress(0, 0);
     ProgressPage.Show;
@@ -65,12 +76,47 @@ begin
       ProgressPage.Hide;
     end;
     Result := True;
-  end else
-    Result := True;
+    exit
+  end;
+  
+  Result := True;
 end;
 
-function GetUserPIN(Value: string): string;
+function GetUserPIN(Value: String): String;
 begin
   Result := KeyPage.Values[0];
+end;
+
+function GetRunAppPath(Value: String): String;
+begin
+  if TypePage.Values[0] = True then begin
+    Result := 'C:\UTM\installer\bin\transport-installer-gui.bat';
+  end else
+    Result := ExpandConstant('{app}\rutoken_new.bat');
+end;
+
+function GUIconfig(): Boolean;
+begin
+  Result := TypePage.Values[0];
+end;
+
+function InitializeSetup(): Boolean;
+begin
+  if not FileExists('C:\UTM\installer\bin\transport-installer-gui.bat') then begin
+    MsgBox('Корректная установка УТМ не обнаружена. Установка будет прервана.', mbCriticalError, MB_OK);
+    Result := False;
+    exit
+  end;
+  if FileExists(ExpandConstant('{win}\System32\rtPKCS11ECP.dll')) or
+     FileExists(ExpandConstant('{win}\SysWOW64\rtPKCS11ECP.dll')) then begin
+    Result := True;
+    exit
+  end else begin
+    MsgBox('Корректная установка Драйверов Рутокен не обнаружена. Установите Драйвера Рутокен перед запуском этой установки. Установка будет прервана.', mbCriticalError, MB_OK);
+    Result := False;
+    exit
+  end;
+
+  Result := True;
 end;
 
