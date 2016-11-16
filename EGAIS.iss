@@ -1,4 +1,4 @@
-; -- CodeDlg.iss --
+; -- EGAIS.iss --
 ;
 ; This script create installer to auto launch rutoken_new.bat
 
@@ -9,8 +9,8 @@ DefaultDirName={pf}\Rutoken UTM fix
 DisableProgramGroupPage=yes
 
 [Languages]
-Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
-
+Name: "en"; MessagesFile: "compiler:Default.isl, RutokenEn.isl"
+Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl, RutokenRu.isl"
 
 [Files]
 Source: "rutoken_new.bat"; DestDir: "{app}"
@@ -30,15 +30,15 @@ var
   
 procedure InitializeWizard;
 begin
-  KeyPage := CreateInputQueryPage(wpWelcome, 'Персональная информация', 'PIN-код от токена', 'Пожалуйста, укажите PIN-код токена и нажмите Next чтобы продолжить.');
+  KeyPage := CreateInputQueryPage(wpWelcome, CustomMessage('PersonalInfoKey'), 'PIN-код от токена', 'Пожалуйста, укажите PIN-код токена и нажмите Next чтобы продолжить.');
   KeyPage.Add('PIN-код токена:', False);
 
   TypePage := CreateInputOptionPage(KeyPage.ID, 'Настройки установки', 'Режим настройки', 'Пожалуйста, выберите режим, который будет использоваться для настройки:', True, False);
-  TypePage.Add('Графический интерфейс');
-  TypePage.Add('Автоматическая настройка');
+  TypePage.Add(CustomMessage('GuiConfigKey'));
+  TypePage.Add(CustomMessage('AutoConfigKey'));
   TypePage.Values[0] := True;
 
-  ProgressPage := CreateOutputProgressPage('Персональная информация', 'PIN-код от токена');
+  ProgressPage := CreateOutputProgressPage(CustomMessage('PersonalInfoKey'), 'PIN-код от токена');
 
   KeyPage.Values[0] := GetPreviousData('PIN', '12345678');
 end;
