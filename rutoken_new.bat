@@ -39,7 +39,13 @@ for /f "delims=" %%a in (%verfile%) do (
 move /y %tempfile% %verfile% >nul
 
 for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_linux_style%/%sysarch%/rtPKCS11ECP-replica.dll)>>%tempfile%)
+  (echo "%%a")|>nul find /i "%pin_gost%="&&((echo %pin_gost%=%1)>>%tempfile%)
+  (echo "%%a")|>nul find /i "%pin_gost%="||(echo %%a)>>%tempfile%
+)
+move /y %tempfile% %verfile% >nul
+
+for /f "delims=" %%a in (%verfile%) do (
+  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
   (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
 )
 move /y %tempfile% %verfile% >nul
