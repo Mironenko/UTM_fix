@@ -3,11 +3,9 @@
 cd %SystemRoot%
 cd ..
 
-set arch=%PROCESSOR_ARCHITECTURE%
-if "%arch%" == "AMD64" (
-  set sysarch=SysWOW64
-) else (
-  set sysarch=System32
+set sysarch=SysWOW64
+if "%PROCESSOR_ARCHITECTURE%" == "x86" (
+  if not defined PROCESSOR_ARCHITEW6432 set sysarch=System32
 )
 
 set system_root_linux_style=%SystemRoot:\=/%
