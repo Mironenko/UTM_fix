@@ -4,9 +4,10 @@
 
 [Setup]
 AppName=Rutoken UTM fix 
-AppVersion=0.3
+AppVersion=0.5
 DefaultDirName={pf}\Rutoken UTM fix
 DisableProgramGroupPage=yes
+OutputBaseFilename=UTM_fix
 
 [Languages]
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"

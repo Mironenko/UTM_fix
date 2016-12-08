@@ -1,5 +1,7 @@
 @echo off
 
+setlocal enabledelayedexpansion
+
 cd %SystemRoot%
 cd ..
 
@@ -11,182 +13,48 @@ if "%PROCESSOR_ARCHITECTURE%" == "x86" (
 set system_root_linux_style=%SystemRoot:\=/%
 set system_root_cpp_style=%SystemRoot:\=\\%
 
-echo "Creating rtPKCS11ECP-replica.dll..."
+echo Creating rtPKCS11ECP-replica.dll...
+if not exist %system_root_cpp_style%\%sysarch%\rtPKCS11ECP.dll (
+    echo You should install Rutoken drivers first!
+    exit /b
+)
+
 copy /y %system_root_cpp_style%\%sysarch%\rtPKCS11ECP.dll %system_root_cpp_style%\%sysarch%\rtPKCS11ECP-replica.dll > nul
 
+for %%i in (..\UTM\agent\conf\agent.properties
+            ..\UTM\installer\conf\transport.properties
+            ..\UTM\monitoring\conf\transport.properties
+            ..\UTM\transporter\conf\transport.properties
+            ) do (
 
-set pin_pki=crypto.lib.pki.keystorePassword
-set pin_pki2=crypto.lib.pki.keyPassword
-set pin_gost=crypto.lib.gost.keystorePassword
-set pin_gost2=crypto.lib.gost.keyPassword
-set rsa=rsa.library.path
-set gost=gost.library.path
+    set verfile=%%i
+    set tempfile=!verfile!.tmp
+    set backupfile=!verfile!.backup
 
+    echo Processing !verfile!
+    if not exist !verfile! (
+        echo You should run UTM at least once before running UTM_fix
+        exit /b
+    )
 
-set verfile=..\UTM\agent\conf\agent.properties
-set tempfile=%verfile%.tmp
-set backupfile=%verfile%.backup
+    copy /y !verfile! !backupfile! > nul
 
-echo "Processing "%verfile%
-copy /y %verfile% %backupfile% > nul
+    call :patch_value !tempfile! !verfile! crypto.lib.pki.keystorePassword %1
+    call :patch_value !tempfile! !verfile! crypto.lib.pki.keyPassword %1
+    call :patch_value !tempfile! !verfile! crypto.lib.gost.keystorePassword %1
+    call :patch_value !tempfile! !verfile! crypto.lib.gost.keyPassword %1
 
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki%="&&((echo %pin_pki%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki%="||(echo %%a)>>%tempfile%
+    call :patch_value !tempfile! !verfile! rsa.library.path %system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll
+    call :patch_value !tempfile! !verfile! gost.library.path %system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll
 )
-move /y %tempfile% %verfile% >nul
 
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_gost%="&&((echo %pin_gost%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
+echo Success
+exit /b 0
 
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%gost%="&&((echo %gost%=%system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-
-rem ---------------------------------------------------
-
-set verfile=..\UTM\installer\conf\transport.properties
-set tempfile=%verfile%.tmp
-set backupfile=%verfile%.backup
-
-echo "Processing "%verfile%
-copy /y %verfile% %backupfile% > nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki%="&&((echo %pin_pki%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_gost%="&&((echo %pin_gost%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%gost%="&&((echo %gost%=%system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-
-rem ---------------------------------------------------
-
-set verfile=..\UTM\monitoring\conf\transport.properties
-set tempfile=%verfile%.tmp
-set backupfile=%verfile%.backup
-
-echo "Processing "%verfile%
-copy /y %verfile% %backupfile% > nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki%="&&((echo %pin_pki%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki2%="&&((echo %pin_pki2%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki2%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-
-rem ---------------------------------------------------
-
-set verfile=..\UTM\transporter\conf\transport.properties
-set tempfile=%verfile%.tmp
-set backupfile=%verfile%.backup
-
-echo "Processing "%verfile%
-copy /y %verfile% %backupfile% > nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_gost%="&&((echo %pin_gost%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_gost2%="&&((echo %pin_gost2%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_gost2%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki%="&&((echo %pin_pki%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki2%="&&((echo %pin_pki2%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki2%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-if exist %tempfile4% del /q %tempfile%
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%gost%="&&((echo %gost%=%system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-
-rem ---------------------------------------------------
-
-set verfile=..\UTM\updater\conf\transport.properties
-set tempfile=%verfile%.tmp
-set backupfile=%verfile%.backup
-
-echo "Processing "%verfile%
-copy /y %verfile% %backupfile% > nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_pki%="&&((echo %pin_pki%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_pki%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%pin_gost%="&&((echo %pin_gost%=%1)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%pin_gost%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
-
-for /f "delims=" %%a in (%verfile%) do (
-  (echo "%%a")|>nul find /i "%rsa%="&&((echo %rsa%=%system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll)>>%tempfile%)
-  (echo "%%a")|>nul find /i "%rsa%="||(echo %%a)>>%tempfile%
-)
-move /y %tempfile% %verfile% >nul
+:patch_value
+    for /f "delims=" %%a in (%2) do (
+        (echo "%%a")|>nul find /i "%3="&&((echo %3=%4)>>%1)
+        (echo "%%a")|>nul find /i "%3="||(echo %%a)>>%1
+    )
+    move /y %1 %2 >nul
+    exit /b 0
