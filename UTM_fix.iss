@@ -1,10 +1,11 @@
-; -- CodeDlg.iss --
+; -- UTM_fix.iss --
 ;
 ; This script create installer to auto launch rutoken_new.bat
+; Created in InnoSetup 5.5.9 (unicode)
 
 [Setup]
 AppName=Rutoken UTM fix 
-AppVersion=0.5
+AppVersion=0.6
 DefaultDirName={pf}\Rutoken UTM fix
 DisableProgramGroupPage=yes
 OutputBaseFilename=UTM_fix

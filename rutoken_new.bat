@@ -6,9 +6,22 @@ cd %SystemRoot%
 cd ..
 
 set sysarch=SysWOW64
+set sysarch2=SysWOW64
 if "%PROCESSOR_ARCHITECTURE%" == "x86" (
   if not defined PROCESSOR_ARCHITEW6432 set sysarch=System32
 )
+
+echo Detect system architecture, test1 - %sysarch%
+
+if not exist %SystemRoot%\%sysarch2% set sysarch2=System32
+echo Detect system architecture, test2 - %sysarch2%
+
+if not "%sysarch%" == "%sysarch2%" set sysarch=%sysarch2%
+echo Using system architecture - %sysarch%
+
+set pin=%1
+if "%pin%"=="" set pin=12345678
+echo Using pin code - %pin%
 
 set system_root_linux_style=%SystemRoot:\=/%
 set system_root_cpp_style=%SystemRoot:\=\\%
@@ -39,10 +52,10 @@ for %%i in (..\UTM\agent\conf\agent.properties
 
     copy /y !verfile! !backupfile! > nul
 
-    call :patch_value !tempfile! !verfile! crypto.lib.pki.keystorePassword %1
-    call :patch_value !tempfile! !verfile! crypto.lib.pki.keyPassword %1
-    call :patch_value !tempfile! !verfile! crypto.lib.gost.keystorePassword %1
-    call :patch_value !tempfile! !verfile! crypto.lib.gost.keyPassword %1
+    call :patch_value !tempfile! !verfile! crypto.lib.pki.keystorePassword %pin%
+    call :patch_value !tempfile! !verfile! crypto.lib.pki.keyPassword %pin%
+    call :patch_value !tempfile! !verfile! crypto.lib.gost.keystorePassword %pin%
+    call :patch_value !tempfile! !verfile! crypto.lib.gost.keyPassword %pin%
 
     call :patch_value !tempfile! !verfile! rsa.library.path %system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll
     call :patch_value !tempfile! !verfile! gost.library.path %system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll
