@@ -11,28 +11,36 @@ if "%PROCESSOR_ARCHITECTURE%" == "x86" (
   if not defined PROCESSOR_ARCHITEW6432 set sysarch=System32
 )
 
-echo Detect system architecture, test1 - %sysarch%
+echo Detect system architecture, test1 - !sysarch!
 
-if not exist %SystemRoot%\%sysarch2% set sysarch2=System32
-echo Detect system architecture, test2 - %sysarch2%
+if not exist %SystemRoot%\!sysarch2! set sysarch2=System32
+echo Detect system architecture, test2 - !sysarch2!
 
-if not "%sysarch%" == "%sysarch2%" set sysarch=%sysarch2%
-echo Using system architecture - %sysarch%
+if not "%sysarch%" == "%sysarch2%" set sysarch=!sysarch2!
+echo Using system architecture - !sysarch!
 
 set pin=%1
 if "%pin%"=="" set pin=12345678
 echo Using pin code - %pin%
 
-set system_root_linux_style=%SystemRoot:\=/%
 set system_root_cpp_style=%SystemRoot:\=\\%
 
 echo Creating rtPKCS11ECP-replica.dll...
-if not exist %system_root_cpp_style%\%sysarch%\rtPKCS11ECP.dll (
+if not exist %system_root_cpp_style%\!sysarch!\rtPKCS11ECP.dll (
     echo You should install Rutoken drivers first!
     exit /b
 )
 
-copy /y %system_root_cpp_style%\%sysarch%\rtPKCS11ECP.dll %system_root_cpp_style%\%sysarch%\rtPKCS11ECP-replica.dll > nul
+copy /y %system_root_cpp_style%\!sysarch!\rtPKCS11ECP.dll %system_root_cpp_style%\!sysarch!\rtPKCS11ECP-replica.dll > nul
+%system_root_cpp_style%\!sysarch!\regsvr32.exe /s %system_root_cpp_style%\!sysarch!\rtPKCS11ECP-replica.dll > nul
+
+if not "!sysarch!" == "System32" (
+    echo Creating rtPKCS11ECP-replica.dll x86-64 version...
+    set sysarch=System32
+    set sysarch=!sysarch:~0,10!
+    copy /y %system_root_cpp_style%\!sysarch!\rtPKCS11ECP.dll %system_root_cpp_style%\!sysarch!\rtPKCS11ECP-replica.dll > nul
+    %system_root_cpp_style%\!sysarch!\regsvr32.exe /s %system_root_cpp_style%\!sysarch!\rtPKCS11ECP-replica.dll > nul
+)
 
 for %%i in (..\UTM\agent\conf\agent.properties
             ..\UTM\installer\conf\transport.properties
@@ -57,8 +65,8 @@ for %%i in (..\UTM\agent\conf\agent.properties
     call :patch_value !tempfile! !verfile! crypto.lib.gost.keystorePassword %pin%
     call :patch_value !tempfile! !verfile! crypto.lib.gost.keyPassword %pin%
 
-    call :patch_value !tempfile! !verfile! rsa.library.path %system_root_cpp_style%\\%sysarch%\\rtPKCS11ECP-replica.dll
-    call :patch_value !tempfile! !verfile! gost.library.path %system_root_cpp_style%\\%sysarch%\\rttranscrypt.dll
+    call :patch_value !tempfile! !verfile! rsa.library.path %system_root_cpp_style%\\!sysarch!\\rtPKCS11ECP-replica.dll
+    call :patch_value !tempfile! !verfile! gost.library.path %system_root_cpp_style%\\!sysarch!\\rttranscrypt.dll
 )
 
 echo Success

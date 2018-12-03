@@ -5,7 +5,7 @@
 
 [Setup]
 AppName=Rutoken UTM fix 
-AppVersion=0.6
+AppVersion=0.7
 DefaultDirName={pf}\Rutoken UTM fix
 DisableProgramGroupPage=yes
 OutputBaseFilename=UTM_fix
