@@ -1,29 +1,29 @@
 ; -- UTM_fix.iss --
 ;
 ; This script create installer to auto launch rutoken_new.bat
-; Created in InnoSetup 5.5.9 (unicode)
+; Created in InnoSetup 5.6.1 (unicode)
 
 [Setup]
 AppName=Rutoken UTM fix 
-AppVersion=0.7
+AppVersion=0.8
 DefaultDirName={pf}\Rutoken UTM fix
 DisableProgramGroupPage=yes
 OutputBaseFilename=UTM_fix
+PrivilegesRequired=admin
 
 [Languages]
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "en"; MessagesFile: "compiler:Default.isl"
 
-
 [Files]
 Source: "rutoken_new.bat"; DestDir: "{app}"
 
 [Registry]
-Root: HKCU; Subkey: "Software\Aktiv Co."; Flags: uninsdeletekeyifempty
-Root: HKCU; Subkey: "Software\Aktiv Co.\Rutoken UTM fix"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\Aktiv Co."; Flags: uninsdeletekeyifempty
+Root: HKLM; Subkey: "Software\Aktiv Co.\Rutoken UTM fix"; Flags: uninsdeletekey
 
 [Run]
-Filename: "{app}\rutoken_new.bat"; Parameters: {code:GetUserPIN}
+Filename: "{app}\rutoken_new.bat"; Flags: runascurrentuser; Parameters: {code:GetUserPIN}
 
 [Code]
 var
@@ -43,8 +43,6 @@ begin
 end;
 
 procedure RegisterPreviousData(PreviousDataKey: Integer);
-var
-  UsageMode: String;
 begin
   SetPreviousData(PreviousDataKey, 'PIN', KeyPage.Values[0]);
 end;
@@ -52,7 +50,6 @@ end;
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
   I: Integer;
-  ResultCode: Integer;
 begin
   if CurPageID = KeyPage.ID then begin
     ProgressPage.SetText('Выполняю проверку компьютера...', '');
